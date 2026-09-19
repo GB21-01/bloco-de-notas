@@ -1,1 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Bloco de Notas</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --primary-color: #4a90e2;
+            --primary-hover: #357abd;
+            --danger-color: #e74c3c;
+            --danger-hover: #c0392b;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
 
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #f0f0f0;
+            --border-color: #404040;
+            --primary-color: #3498db;
+            --primary-hover: #2980b9;
+            --danger-color: #e74c3c;
+            --danger-hover: #c0392b;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Barra Lateral */
+        .sidebar {
+            width: 300px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            background: var(--container-bg);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .notes-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .note-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .note-item:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        [data-theme="dark"] .note-item:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .note-item.active {
+            background-color: rgba(74, 144, 226, 0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .note-title-preview {
+            font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .note-date {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        /* Área do Editor */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--container-bg);
+        }
+
+        .editor-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .editor-title {
+            width: 70%;
+            font-size: 1.2rem;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .editor-content {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            outline: none;
+            resize: none;
+            background: transparent;
+            color: var(--text-color);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            color: #888;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <div class="app-container">
+        <!-- Barra Lateral com Lista de Notas -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Minhas Notas</h2>
+                <button class="btn" onclick="createNewNote()">+ Nova</button>
+            </div>
+            <ul class="notes-list" id="notesList">
+                <!-- Notas injetadas via JavaScript -->
+            </ul>
+        </div>
+
+        <!-- Editor de Texto -->
+        <div class="editor-area" id="editorArea">
+            <div id="noNoteSelected" class="empty-state">
+                Selecione uma nota ou crie uma nova para começar.
+            </div>
+            
+            <div id="activeEditor" style="display: none; flex: 1; flex-direction: column;">
+                <div class="editor-header">
+                    <input type="text" id="noteTitleInput" class="editor-title" placeholder="Título da nota..." oninput="updateActiveNote()">
+                    <div class="editor-actions">
+                        <button class="theme-toggle" onclick="toggleTheme()" title="Mudar Tema">🌓</button>
+                        <button class="btn btn-danger" onclick="deleteActiveNote()">Excluir</button>
+                    </div>
+                </div>
+                <textarea id="noteContentInput" class="editor-content" placeholder="Escreva seu texto aqui..." oninput="updateActiveNote()"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+        let activeNoteId = null;
+
+        const notesList = document.getElementById('notesList');
+        const noNoteSelected = document.getElementById('noNoteSelected');
+        const activeEditor = document.getElementById('activeEditor');
+        const noteTitleInput = document.getElementById('noteTitleInput');
+        const noteContentInput = document.getElementById('noteContentInput');
+
+        function saveToLocalStorage() {
+            localStorage.setItem('notes', JSON.stringify(notes));
+        }
+
+        function renderNotesList() {
+            notesList.innerHTML = '';
+            
+            if (notes.length === 0) {
+                notesList.innerHTML = '<li style="padding: 20px; text-align: center; color: #888; font-size: 0.9rem;">Nenhuma nota salva.</li>';
+                return;
+            }
+
+            // Ordenar por data de modificação (mais recente primeiro)
+            notes.sort((a, b) => b.updatedAt - a.updatedAt);
+
+            notes.forEach(note => {
+                const li = document.createElement('li');
+                li.className = `note-item ${note.id === activeNoteId ? 'active' : ''}`;
+                li.onclick = () => selectNote(note.id);
+
+                const titlePreview = document.createElement('div');
+                titlePreview.className = 'note-title-preview';
+                titlePreview.textContent = note.title || 'Nota sem título';
+
+                const datePreview = document.createElement('div');
+                datePreview.className = 'note-date';
+                datePreview.textContent = new Date(note.updatedAt).toLocaleDateString('pt-BR', {
+                    hour: '2-digit', minute: '2-digit'
+                });
+
+                li.appendChild(titlePreview);
+                li.appendChild(datePreview);
+                notesList.appendChild(li);
+            });
+        }
+
+        function createNewNote() {
+            const newNote = {
+                id: Date.now().toString(),
+                title: 'Nova Nota',
+                content: '',
+                updatedAt: Date.now()
+            };
+
+            notes.unshift(newNote);
+            selectNote(newNote.id);
+            saveToLocalStorage();
+            renderNotesList();
+        }
+
+        function selectNote(id) {
+            activeNoteId = id;
+            const note = notes.find(n => n.id === id);
+
+            if (note) {
+                noNoteSelected.style.display = 'none';
+                activeEditor.style.display = 'flex';
+                noteTitleInput.value = note.title;
+                noteContentInput.value = note.content;
+            } else {
+                noNoteSelected.style.display = 'flex';
+                activeEditor.style.display = 'none';
+            }
+
+            renderNotesList();
+        }
+
+        function updateActiveNote() {
+            if (!activeNoteId) return;
+
+            const note = notes.find(n => n.id === activeNoteId);
+            if (note) {
+                note.title = noteTitleInput.value;
+                note.content = noteContentInput.value;
+                note.updatedAt = Date.now();
+                saveToLocalStorage();
+                renderNotesList();
+            }
+        }
+
+        function deleteActiveNote() {
+            if (!activeNoteId) return;
+
+            notes = notes.filter(n => n.id !== activeNoteId);
+            activeNoteId = null;
+            
+            noNoteSelected.style.display = 'flex';
+            activeEditor.style.display = 'none';
+
+            saveToLocalStorage();
+            renderNotesList();
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            if (body.getAttribute('data-theme') === 'light') {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.setAttribute('data-theme', 'light');
+            }
+        }
+
+        // Inicializar o aplicativo carregando a primeira nota se houver
+        if (notes.length > 0) {
+            selectNote(notes[0].id);
+        } else {
+            renderNotesList();
+        }
+    </script>
+</body>
+</html>
