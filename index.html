@@ -158,7 +158,7 @@
         }
 
         .editor-title {
-            width: 70%;
+            width: 50%;
             font-size: 1.2rem;
             border: none;
             outline: none;
@@ -171,6 +171,16 @@
             display: flex;
             gap: 10px;
             align-items: center;
+        }
+
+        .template-select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--container-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 0.9rem;
         }
 
         .editor-content {
@@ -228,6 +238,12 @@
                 <div class="editor-header">
                     <input type="text" id="noteTitleInput" class="editor-title" placeholder="Título da nota..." oninput="updateActiveNote()">
                     <div class="editor-actions">
+                        <select class="template-select" id="templateSelect" onchange="insertTemplate(this)">
+                            <option value="" disabled selected>📌 Inserir Modelo...</option>
+                            <option value="ligar">Ligar mais tarde</option>
+                            <option value="atendimento">Atendimento Geral</option>
+                            <option value="reuniao">Reunião</option>
+                        </select>
                         <button class="theme-toggle" onclick="toggleTheme()" title="Mudar Tema">🌓</button>
                         <button class="btn btn-danger" onclick="deleteActiveNote()">Excluir</button>
                     </div>
@@ -246,6 +262,7 @@
         const activeEditor = document.getElementById('activeEditor');
         const noteTitleInput = document.getElementById('noteTitleInput');
         const noteContentInput = document.getElementById('noteContentInput');
+        const templateSelect = document.getElementById('templateSelect');
 
         function saveToLocalStorage() {
             localStorage.setItem('notes', JSON.stringify(notes));
@@ -259,7 +276,6 @@
                 return;
             }
 
-            // Ordenar por data de modificação (mais recente primeiro)
             notes.sort((a, b) => b.updatedAt - a.updatedAt);
 
             notes.forEach(note => {
@@ -306,6 +322,7 @@
                 activeEditor.style.display = 'flex';
                 noteTitleInput.value = note.title;
                 noteContentInput.value = note.content;
+                templateSelect.selectedIndex = 0; // Reseta o select
             } else {
                 noNoteSelected.style.display = 'flex';
                 activeEditor.style.display = 'none';
@@ -325,6 +342,32 @@
                 saveToLocalStorage();
                 renderNotesList();
             }
+        }
+
+        function insertTemplate(selectElement) {
+            const value = selectElement.value;
+            let templateText = '';
+
+            if (value === 'ligar') {
+                templateText = "Nome: \nContato: \nOpção: Ligar mais tarde\nObservações: ";
+            } else if (value === 'atendimento') {
+                templateText = "Nome: \nContato: \nAssunto: \nStatus: Em andamento";
+            } else if (value === 'reuniao') {
+                templateText = "Participantes: \nData/Hora: \nPauta: \nEncaminhamentos: ";
+            }
+
+            if (templateText) {
+                // Adiciona o texto no final do conteúdo atual ou substitui se estiver vazio
+                if (noteContentInput.value.trim() !== '') {
+                    noteContentInput.value += "\n\n" + templateText;
+                } else {
+                    noteContentInput.value = templateText;
+                }
+                updateActiveNote();
+            }
+
+            // Reseta o select para o padrão
+            selectElement.selectedIndex = 0;
         }
 
         function deleteActiveNote() {
@@ -349,7 +392,6 @@
             }
         }
 
-        // Inicializar o aplicativo carregando a primeira nota se houver
         if (notes.length > 0) {
             selectNote(notes[0].id);
         } else {
